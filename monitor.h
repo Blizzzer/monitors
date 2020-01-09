@@ -226,7 +226,11 @@ public:
     };
 
     int getSize() {
-        return elements;
+        int ret;
+        enter();
+        ret = elements;
+        leave();
+        return ret;
     }
 };
 
@@ -263,16 +267,17 @@ Message generateMessage(int prio) {
 }
 
 int checkLength(Message msg) {
+    int ret;
     if(msg.message[0] == 'X') {
-        return 0;
+        ret = 0;
+    } else if(msg.message[1] == 'X') {
+        ret = 1;
+    } else if(msg.message[2] == 'X') {
+        ret = 2;
+    } else {
+        ret = 3;
     }
-    if(msg.message[1] == 'X') {
-        return 1;
-    }
-    if(msg.message[2] == 'X') {
-        return 2;
-    }
-    return 3;
+    return ret;
 }
 
 
