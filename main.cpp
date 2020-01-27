@@ -29,13 +29,14 @@ void *KonsC(void *ptr);
 
 MyQueue *bufA, *bufB, *bufC;
 double timeA, timeB, timeC;
-int pr = 30;
+int pr = 70;
 
 int main() {
+
     pthread_t threadProducentA;
     pthread_t threadProducentB;
     pthread_t threadProducentC;
-    //pthread_t threadProducentSpec;
+    pthread_t threadProducentSpec;
     pthread_t threadProtectionProducent;
     pthread_t threadKonsA;
     pthread_t threadKonsB;
@@ -51,7 +52,7 @@ int main() {
     pthread_create(&threadProducentA, NULL, producentA, NULL);
     pthread_create(&threadProducentB, NULL, producentB, NULL);
     pthread_create(&threadProducentC, NULL, producentC, NULL);
-    //pthread_create(&threadProducentSpec, NULL, specProducent, NULL);
+    pthread_create(&threadProducentSpec, NULL, specProducent, NULL);
     pthread_create(&threadProtectionProducent, NULL, protectionProducent, NULL);
     pthread_create(&threadKonsA, NULL, KonsA, NULL);
     pthread_create(&threadKonsB, NULL, KonsB, NULL);
@@ -117,16 +118,18 @@ void *specProducent(void *ptr) {
         switch (generateSign()) {
             case 'A':
                 bufA->insert(toInsert);
+                break;
             case 'B':
                 bufB->insert(toInsert);
+                break;
             case 'C':
                 bufC->insert(toInsert);
+                break;
         }
-
-        bufA->insert(toInsert);
 
         cout << "message " << toInsert.message << " inserted - producent spec" << endl;
     }
+
     pthread_exit(NULL);
 }
 
@@ -148,15 +151,16 @@ void *protectionProducent(void *ptr) {
         switch (sign) {
             case 'A':
                 bufA->insert(toInsert);
+                break;
             case 'B':
                 bufB->insert(toInsert);
+                break;
             case 'C':
                 bufC->insert(toInsert);
+                break;
         }
 
-        bufA->insert(toInsert);
-
-        cout << "message " << toInsert.message << " inserted - producent spec" << endl;
+        cout << "protection message inserted " << endl;
     }
     pthread_exit(NULL);
 }
@@ -166,7 +170,7 @@ void *KonsA(void *ptr) {
     Message popped;
     for (int i = 0; i < 200; ++i) {
         while(count < 5) {
-            popped = bufA->take();
+            bufA->take();
             count++;
         }
 
@@ -191,6 +195,7 @@ void *KonsA(void *ptr) {
                     } else {
                         popped.message[0] = 'X';
                     }
+                    break;
                 case 2:
                     popped.message[0] = popped.message[1];
                     if (doWithProbabilty(pr)) {
@@ -198,6 +203,8 @@ void *KonsA(void *ptr) {
                     } else {
                         popped.message[1] = 'X';
                     }
+                    break;
+
                 case 3:
                     popped.message[0] = popped.message[1];
                     popped.message[1] = popped.message[2];
@@ -206,15 +213,20 @@ void *KonsA(void *ptr) {
                     } else {
                         popped.message[2] = 'X';
                     }
+                    break;
+
             }
 
             switch (consumedSign) {
                 case 'A':
                     bufA->insert(popped);
+                    break;
                 case 'B':
                     bufB->insert(popped);
+                    break;
                 case 'C':
                     bufC->insert(popped);
+                    break;
             }
 
             printf("i reinsert message %s to queue %c\n", popped.message, consumedSign);
@@ -232,7 +244,7 @@ void *KonsB(void *ptr) {
 
     for (int i = 0; i < 200; ++i) {
         while(count < 5) {
-            popped = bufB->take();
+            bufB->take();
             count++;
         }
 
@@ -244,7 +256,7 @@ void *KonsB(void *ptr) {
         delay(0.5);
 
         if (checkLength(popped)) {
-            printf("received message %s kons B of lenght %d \n", popped.message, checkLength(popped));
+            printf("received message %s kons B\n", popped.message);
 
             char consumedSign = popped.message[0];
             switch (checkLength(popped)) {
@@ -254,6 +266,8 @@ void *KonsB(void *ptr) {
                     } else {
                         popped.message[0] = 'X';
                     }
+                    break;
+
                 case 2:
                     popped.message[0] = popped.message[1];
                     if (doWithProbabilty(pr)) {
@@ -261,6 +275,8 @@ void *KonsB(void *ptr) {
                     } else {
                         popped.message[1] = 'X';
                     }
+                    break;
+
                 case 3:
                     popped.message[0] = popped.message[1];
                     popped.message[1] = popped.message[2];
@@ -269,15 +285,20 @@ void *KonsB(void *ptr) {
                     } else {
                         popped.message[2] = 'X';
                     }
+                    break;
+
             }
 
             switch (consumedSign) {
                 case 'A':
                     bufA->insert(popped);
+                    break;
                 case 'B':
                     bufB->insert(popped);
+                    break;
                 case 'C':
                     bufC->insert(popped);
+                    break;
             }
             printf("i reinsert message %s to queue %c\n", popped.message, consumedSign);
 
@@ -293,7 +314,7 @@ void *KonsC(void *ptr) {
     Message popped;
     for (int i = 0; i < 200; ++i) {
         while(count < 5) {
-            popped = bufC->take();
+            bufC->take();
             count++;
         }
 
@@ -316,6 +337,8 @@ void *KonsC(void *ptr) {
                     } else {
                         popped.message[0] = 'X';
                     }
+                    break;
+
                 case 2:
                     popped.message[0] = popped.message[1];
                     if (doWithProbabilty(pr)) {
@@ -323,6 +346,7 @@ void *KonsC(void *ptr) {
                     } else {
                         popped.message[1] = 'X';
                     }
+                    break;
                 case 3:
                     popped.message[0] = popped.message[1];
                     popped.message[1] = popped.message[2];
@@ -331,15 +355,19 @@ void *KonsC(void *ptr) {
                     } else {
                         popped.message[2] = 'X';
                     }
+                    break;
             }
 
             switch (consumedSign) {
                 case 'A':
                     bufA->insert(popped);
+                    break;
                 case 'B':
                     bufB->insert(popped);
+                    break;
                 case 'C':
                     bufC->insert(popped);
+                    break;
             }
             printf("i reinsert message %s to queue %c\n", popped.message, consumedSign);
 

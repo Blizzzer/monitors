@@ -7,6 +7,7 @@
 #ifdef _WIN32
 #include <windows.h>
 #else
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <string.h>
@@ -20,44 +21,40 @@
 
 #endif
 
-class Semaphore
-{
+class Semaphore {
 public:
 
-    Semaphore( int value )
-    {
+    Semaphore(int value) {
 #ifdef _WIN32
         sem = CreateSemaphore( NULL, value, 1, NULL );
 #else
-        if( sem_init( & sem, 0, value ) != 0 )
+        if (sem_init(&sem, 0, value) != 0)
             throw "sem_init: failed";
 #endif
     }
-    ~Semaphore()
-    {
+
+    ~Semaphore() {
 #ifdef _WIN32
         CloseHandle( sem );
 #else
-        sem_destroy( & sem );
+        sem_destroy(&sem);
 #endif
     }
 
-    void p()
-    {
+    void p() {
 #ifdef _WIN32
         WaitForSingleObject( sem, INFINITE );
 #else
-        if( sem_wait( & sem ) != 0 )
+        if (sem_wait(&sem) != 0)
             throw "sem_wait: failed";
 #endif
     }
 
-    void v()
-    {
+    void v() {
 #ifdef _WIN32
         ReleaseSemaphore( sem, 1, NULL );
 #else
-        if( sem_post( & sem ) != 0 )
+        if (sem_post(&sem) != 0)
             throw "sem_post: failed";
 #endif
     }
@@ -72,26 +69,21 @@ private:
 #endif
 };
 
-class Condition
-{
+class Condition {
     friend class Monitor;
 
 public:
-    Condition() : w( 0 )
-    {
+    Condition() : w(0) {
         waitingCount = 0;
     }
 
-    void wait()
-    {
+    void wait() {
         w.p();
     }
 
-    bool signal()
-    {
-        if( waitingCount )
-        {
-            -- waitingCount;
+    bool signal() {
+        if (waitingCount) {
+            --waitingCount;
             w.v();
             return true;
         }//if
@@ -105,31 +97,26 @@ private:
 };
 
 
-class Monitor
-{
+class Monitor {
 public:
-    Monitor() : s( 1 ) {}
+    Monitor() : s(1) {}
 
-    void enter()
-    {
+    void enter() {
         s.p();
     }
 
-    void leave()
-    {
+    void leave() {
         s.v();
     }
 
-    void wait( Condition & cond )
-    {
-        ++ cond.waitingCount;
+    void wait(Condition &cond) {
+        ++cond.waitingCount;
         leave();
         cond.wait();
     }
 
-    void signal( Condition & cond )
-    {
-        if( cond.signal() )
+    void signal(Condition &cond) {
+        if (cond.signal())
             enter();
     }
 
@@ -152,15 +139,18 @@ public:
     SimpleQueue() {
         buf_size = 0;
     };
+
     ~SimpleQueue() {};
+
     void insert(Message x) {
         buffer[buf_size] = x;
         buf_size++;
     };
+
     Message take() {
         Message ret = buffer[0];
-        for(int i=0; i<buf_size-1; ++i) {
-            buffer[i] = buffer[i+1];
+        for (int i = 0; i < buf_size - 1; ++i) {
+            buffer[i] = buffer[i + 1];
         }
         --buf_size;
         return ret;
@@ -185,11 +175,13 @@ public:
         highestPrioQue = SimpleQueue();
         elements = 0;
     };
+
     ~MyQueue() {};
+
     void insert(Message mess) {
         enter();
-        if(elements==MAX) wait(full);
-        if(mess.priority == 2) {
+        if (elements == MAX) wait(full);
+        if (mess.priority == 2) {
             highestPrioQue.insert(mess);
             elements++;
         } else if (mess.priority == 1) {
@@ -200,15 +192,16 @@ public:
             elements++;
         }
 
-        if(elements==1) signal(empty);
+        if (elements == 1) signal(empty);
         leave();
     };
+
     Message take() {
         Message ret;
         enter();
-        if(elements==0) wait(empty);
+        if (elements == 0) wait(empty);
 
-        if(highestPrioQue.containsAny()) {
+        if (highestPrioQue.containsAny()) {
             ret = highestPrioQue.take();
             elements--;
         } else if (highPrioQue.containsAny()) {
@@ -218,9 +211,9 @@ public:
             ret = lowPrioQue.take();
             elements--;
         } else {
-           //sth went wrong
+            //sth went wrong
         }
-        if(elements==MAX-1) signal(full);
+        if (elements == MAX - 1) signal(full);
         leave();
         return ret;
     };
@@ -242,7 +235,7 @@ void delay(float number_of_seconds) {
 }
 
 int doWithProbabilty(int pr) {
-    return (random() % 100) >= pr;
+    return (random() % 100) <= pr;
 }
 
 char generateSign() {
@@ -268,11 +261,11 @@ Message generateMessage(int prio) {
 
 int checkLength(Message msg) {
     int ret;
-    if(msg.message[0] == 'X') {
+    if (msg.message[0] == 'X') {
         ret = 0;
-    } else if(msg.message[1] == 'X') {
+    } else if (msg.message[1] == 'X') {
         ret = 1;
-    } else if(msg.message[2] == 'X') {
+    } else if (msg.message[2] == 'X') {
         ret = 2;
     } else {
         ret = 3;
